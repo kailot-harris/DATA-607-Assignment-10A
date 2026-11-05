@@ -352,6 +352,7 @@ tidy_books |>
 
 library(tidyRSS)
 library(syuzhet)
+library(rvest)
 
 ```
 
@@ -369,6 +370,25 @@ wnba_corpus <- wnba_feed |>
 
 knitr::kable(head(wnba_corpus |>  select(title, text), 3))
 ```
+
+```{r}
+get_article_text <- function(url) {
+  tryCatch({
+    read_html(url) |>
+      html_elements("p") |>
+      html_text2() |>
+      paste(collapse = " ")
+  }, error = function(e) NA_character_)
+}
+
+wnba_full_articles <- wnba_feed |>
+  select(title = item_title, 
+         link = item_link) |>
+  mutate(full_article_text = map_chr(link, 
+                                     get_article_text)) |>
+  filter(!is.na(full_article_text))
+```
+
 
 ```{r}
 #| label: std-theme
@@ -416,7 +436,8 @@ wnba_corpus_syuzhet |>
     caption = "Dashed red line indicates neutral sentiment (0)",
     x = "Sentiment Score (Negative < 0 < Positive)",
     y = "Number of Articles"
-  )
+  ) +
+  theme_standard()
 ```
 
 ```{r}
@@ -428,6 +449,11 @@ wnba_corpus_syuzhet |>
 
 wnba_words <- wnba_corpus |>
   unnest_tokens(word, full_text) |>
+  anti_join(stop_words, by = join_by(word))
+
+wnba_words <- wnba_full_articles |>
+  mutate(article_id = row_number()) |>
+  unnest_tokens(word, full_article_text) |>
   anti_join(stop_words, by = join_by(word))
 
 wnba_bing_counts <- wnba_words |>
@@ -448,8 +474,66 @@ wnba_bing_counts |>
     title = "Most Frequent Sentiment Words in ESPN WNBA News",
     x = "Word Count",
     y = NULL
-  )
+  ) +
+  theme_standard()
 ```
+
+```{r}
+wnba_scored <- wnba_full_articles |>
+  mutate(
+    article_id = row_number(),
+    clean_title = stringr::str_replace_all(title, "[^\x01-\x7F]+", ""),
+    short_title = stringr::str_trunc(clean_title, 25),
+     word_count = stringr::str_count(full_article_text, "\\w+"),
+    sentiment_score = get_sentiment(full_article_text, method = "syuzhet"),
+    sentiment_normalized = (sentiment_score / word_count) * 100
+  )
+
+wnba_scored |> 
+  ggplot(aes(x = reorder(short_title, sentiment_normalized), 
+             y = sentiment_normalized, 
+             fill = sentiment_score > 0)) +
+  geom_col(show.legend = FALSE) +
+  coord_flip() +
+  scale_fill_manual(values = c("TRUE" = "#2ca02c", "FALSE" = "#d62728")) +
+  theme_minimal() +
+  labs(
+    title = "WNBA News Displays Postseason Bliss (Syuzhet Lexicon)",
+    x = NULL,
+    y = "Net Sentiment Score (Green = Positive, Red = Negative)"
+  ) +
+  theme_standard()
+```
+
+```{r}
+longest_article <- wnba_full_articles |>
+  slice_max(nchar(full_article_text), n = 1)
+
+article_sentences <- tibble(text = longest_article$full_article_text) |>
+  unnest_tokens(sentence, text, token = "sentences") |>
+  mutate(
+    sentence_num = row_number(),
+    sentiment = get_sentiment(sentence, method = "syuzhet")
+  )
+
+article_sentences |> 
+  ggplot(aes(x = sentence_num, y = sentiment)) +
+  geom_col(fill = "steelblue") +
+  geom_smooth(method = 'loess', 
+              formula = 'y ~ x', 
+              se = FALSE, 
+              color = "orange") +
+  theme_minimal() +
+  labs(
+    title = paste("Sentiment Trajectory:", stringr::str_trunc(longest_article$title, 30)),
+    subtitle = "Tracking sentence-by-sentence emotion across the article",
+    x = "Sentence Number (Beginning to End)",
+    y = "Sentence Sentiment"
+  ) +
+  theme_standard()
+
+```
+
 
 
 ### Findings and Recommendations
