@@ -1,0 +1,324 @@
+---
+title: "DATA 607 - Assignment 10A - Approach"
+author: "Kailot C. Harris"
+date: "2026/11/03"
+format:
+  html:
+    toc: true
+    code-fold: true
+    code-overflow: wrap
+editor: visual
+theme:
+  dark: darkly
+  light: flatly
+bibliography: references.bib
+---
+
+# Introduction and Overview
+
+In this assignment, the sentiment analysis will be performed in two steps.
+
+In the first, an example workflow from Chapter 2 of *Text Mining with R* will be replicated @silge2017text [Chapter 2]. The original code and dataset can be accessed in the online book at [tidytextmining.com/sentiment](https://www.tidytextmining.com/sentiment.html).
+
+Then, the analysis will be extended to analyze a different text corpus, specifically the sentiment of comments on ESPN articles in the WNBA domain[@espn_wnba]. The `TidyRSS` package will be utilized to source the raw comment data, which was developed by @TidyRSS.
+
+# Approach
+
+1.  Replicate example workflow from Chapter 2 of *Text Mining with R*
+
+2.  Source raw comments data from ESPN articles concerning the WNBA
+
+3.  Apply new sentiment lexicons
+
+    1.  VADER
+
+4.  Analyze WNBA comment data to identify trends in 2026 Playoffs
+
+# Codebase
+
+## Step 1: Replicate Sentiment Analysis Example
+
+### Data and library loading
+
+```{r}
+#| label: library-load
+#| echo: false
+#| message: false
+#| warning: false
+
+library(tidytext)
+library(janeaustenr)
+library(tidyverse)
+library(wordcloud)
+library(reshape2)
+```
+
+### Jane Austen Book Extraction
+
+```{r}
+#| label: linenumber-chapter-austen-books
+
+tidy_books <- austen_books() |> 
+  group_by(book) |> 
+  mutate(
+    linenumber = row_number(),
+    chapter = cumsum(str_detect(text, 
+                                regex("^chapter [\\divxlc]",
+                                      ignore_case = TRUE)))) |> 
+  ungroup() |> 
+  unnest_tokens(word, text)
+```
+
+```{r}
+#| label: nrc-sentiment-joy-Emma
+
+nrc_joy <- get_sentiments("nrc") |> 
+  filter(sentiment == "joy")
+
+tidy_books |> 
+  filter(book == "Emma") |> 
+  inner_join(nrc_joy,
+             by = join_by(word)) |> 
+  count(word, sort = TRUE)
+```
+
+```{r}
+#| label: austen-sentiment
+
+jane_austen_sentiment <- tidy_books |>
+  inner_join(get_sentiments("bing"),
+             by = "word",
+             relationship = "many-to-many") |>
+  count(book, 
+        index = linenumber %/% 80, 
+        sentiment) |>
+  pivot_wider(names_from = sentiment, 
+              values_from = n, 
+              values_fill = 0) |> 
+  mutate(sentiment = positive - negative)
+```
+
+### Sentiment Trajectory Across Jane Austen Novels
+
+```{r}
+#| label: fig-austen-bing-trajectory
+#| fig-cap: "Sentiment trajectory across Jane Austen novels using Bing lexicon."
+
+
+jane_austen_sentiment |> 
+  ggplot(aes(index, 
+             sentiment, 
+             fill = book)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~book, ncol = 2, scales = "free_x")
+```
+
+### Analysis of Pride and Prejudice
+
+```{r}
+#| label: pride-prejudice
+
+pride_prejudice <- tidy_books |> 
+  filter(book == "Pride & Prejudice")
+
+
+```
+
+#### Applying sentiment lexicons
+
+```{r}
+#| label: sentiment-lexicons
+
+afinn <- pride_prejudice |> 
+  inner_join(get_sentiments("afinn"),
+             by = join_by(word)) |> 
+  group_by(index = linenumber %/% 80) |> 
+  summarise(sentiment = sum(value)) |> 
+  mutate(method = "AFINN")
+
+bing_and_nrc <- bind_rows(
+  pride_prejudice |> 
+    inner_join(get_sentiments("bing"),
+               by = join_by(word)) |>
+    mutate(method = "Bing et al."),
+  pride_prejudice |> 
+    inner_join(get_sentiments("nrc") |> 
+                 filter(sentiment %in% c("positive", 
+                                         "negative"))
+    ,
+    by = join_by(word),
+    relationship = "many-to-many") |>
+    mutate(method = "NRC")) |>
+  count(method, index = linenumber %/% 80, sentiment) |>
+  pivot_wider(names_from = sentiment,
+              values_from = n,
+              values_fill = 0) |> 
+  mutate(sentiment = positive - negative)
+```
+
+### Lexicon Comparison - Pride and Prejudice
+
+```{r}
+#| label: lexicon-comparison
+
+bind_rows(afinn, 
+          bing_and_nrc) |>
+  ggplot(aes(index, sentiment, fill = method)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~method, ncol = 1, scales = "free_y")
+```
+
+```{r}
+#| label: lexicon-comparison-counts
+
+get_sentiments("nrc") |> 
+  filter(sentiment %in% c("positive", "negative")) |> 
+  count(sentiment)
+
+get_sentiments("bing") |> 
+  count(sentiment)
+```
+
+```{r}
+#| label: bing-pride-prejudice-counts
+
+bing_word_counts <- tidy_books |>
+  inner_join(get_sentiments("bing"),
+             by = join_by(word),
+             relationship = "many-to-many") |>
+  count(word, sentiment, sort = TRUE) |>
+  ungroup()
+```
+
+#### Visualizing Relative Word Counts
+
+```{r}
+#| label: viz-bing-word-counts
+
+bing_word_counts |>
+  group_by(sentiment) |>
+  slice_max(n, n = 10) |> 
+  ungroup() |>
+  mutate(word = reorder(word, n)) |>
+  ggplot(aes(n, word, fill = sentiment)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~sentiment, scales = "free_y") +
+  labs(x = "Contribution to sentiment",
+       y = NULL)
+```
+
+#### Stop Word Definition
+
+```{r}
+#| label: stop-words
+
+custom_stop_words <- bind_rows(tibble(word = c("miss"), lexicon = c("custom")), 
+                               stop_words)
+```
+
+### Word cloud construction
+
+```{r}
+#| label: jane-austen-word-cloud
+#| echo: true
+#| message: false
+#| warning: false
+
+set.seed(424242)
+tidy_books |>
+  anti_join(stop_words,
+            by = join_by(word)) |>
+  count(word) |>
+  with(wordcloud(word, n, max.words = 100))
+```
+
+```{r}
+tidy_books |>
+  inner_join(get_sentiments("bing"),
+             by = join_by(word),
+             relationship = "many-to-many") |>
+  count(word, sentiment, sort = TRUE) |>
+  acast(word ~ sentiment, value.var = "n", fill = 0) |>
+  comparison.cloud(colors = c("gray20", "gray80"),
+                   max.words = 100)
+```
+
+### Sentence Analysis
+
+```{r}
+p_and_p_sentences <- tibble(text = prideprejudice) |> 
+  unnest_tokens(sentence, text, token = "sentences")
+
+p_and_p_sentences$sentence[2]
+```
+
+#### Summarize Jane Austen Chapters
+
+```{r}
+austen_chapters <- austen_books() |>
+  group_by(book) |>
+  unnest_tokens(chapter, text, token = "regex", 
+                pattern = "Chapter|CHAPTER [\\dIVXLC]") |>
+  ungroup()
+
+austen_chapters |> 
+  group_by(book) |> 
+  summarise(chapters = n())
+```
+
+#### Proportion of negative words in Chapter 34
+
+```{r}
+bingnegative <- get_sentiments("bing") |> 
+  filter(sentiment == "negative")
+
+wordcounts <- tidy_books |>
+  group_by(book, chapter) |>
+  summarize(words = n(),
+            .groups = "drop")
+
+tidy_books |>
+  semi_join(bingnegative,
+            by = join_by(word)) |>
+  group_by(book, chapter) |>
+  summarize(negativewords = n(), .groups = "drop") |>
+  left_join(wordcounts, by = c("book", "chapter")) |>
+  mutate(ratio = negativewords/words) |>
+  filter(chapter != 0) |>
+  group_by(book) |>   
+  slice_max(ratio, n = 1) |> 
+  ungroup()
+```
+
+## Step 2: Extension to ESPN's WNBA News
+
+### Data loading
+
+```{r}
+library(tidyRSS)
+
+```
+
+```{r}
+
+wnba_feed <- tidyfeed("https://www.espn.com/espn/rss/wnba/news")
+
+wnba_corpus <- wnba_feed |>
+  select(title = item_title, text = item_description) |>
+  mutate(full_text = paste(title, text))
+```
+
+```{r}
+
+```
+
+### Analysis
+
+### Visualizations
+
+### Findings and Recommendations
+
+# Cited Works
+
+::: {#refs}
+:::

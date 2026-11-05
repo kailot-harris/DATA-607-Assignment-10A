@@ -1,0 +1,40 @@
+---
+title: "DATA 607 - Assignment 10A - Approach"
+author: "Kailot C. Harris"
+date: "2026/11/03"
+format:
+  html:
+    toc: true
+    code-fold: true
+    code-overflow: wrap
+editor: visual
+theme:
+  dark: darkly
+  light: flatly
+bibliography: references.bib
+---
+
+# Introduction and Overview
+
+In this assignment, the sentiment analysis will be performed in two steps.
+
+In the first, an example workflow from Chapter 2 of *Text Mining with R* will be replicated @silge2017text [Chapter 2]. The original code and dataset can be accessed in the online book at [tidytextmining.com/sentiment](https://www.tidytextmining.com/sentiment.html).
+
+Then, the analysis will be extended to analyze a different text corpus, specifically the sentiment of WNBA fans in the WNBA subreddit [@r_wnba]. The `RedditExtractoR` package will be utilized to source the raw comment data, which was developed by @redditextractor.
+
+# Approach
+
+1.  Replicate example workflow from Chapter 2 of *Text Mining with R*
+
+2.  Source raw r\\WNBA comment data using `RedditExtractoR`
+
+3.  Apply new sentiment lexicons
+
+    1.  VADER
+
+4.  Analyze WNBA comment data to identify trends in 2026 Playoffs
+
+# Cited Works
+
+::: {#refs}
+:::
