@@ -57,6 +57,9 @@ library(reshape2)
 
 ```{r}
 #| label: linenumber-chapter-austen-books
+#| echo: true
+#| message: false
+#| warning: false
 
 tidy_books <- austen_books() |> 
   group_by(book) |> 
@@ -71,6 +74,9 @@ tidy_books <- austen_books() |>
 
 ```{r}
 #| label: nrc-sentiment-joy-Emma
+#| echo: true
+#| message: false
+#| warning: false
 
 nrc_joy <- get_sentiments("nrc") |> 
   filter(sentiment == "joy")
@@ -84,6 +90,9 @@ tidy_books |>
 
 ```{r}
 #| label: austen-sentiment
+#| echo: true
+#| message: false
+#| warning: false
 
 jane_austen_sentiment <- tidy_books |>
   inner_join(get_sentiments("bing"),
@@ -102,8 +111,10 @@ jane_austen_sentiment <- tidy_books |>
 
 ```{r}
 #| label: fig-austen-bing-trajectory
-#| fig-cap: "Sentiment trajectory across Jane Austen novels using Bing lexicon."
-
+#| echo: true
+#| message: false
+#| warning: false
+#| fig-cap: "Sentiment Trajectory Across Jane Austen Novels Using Bing lexicon."
 
 jane_austen_sentiment |> 
   ggplot(aes(index, 
@@ -117,17 +128,21 @@ jane_austen_sentiment |>
 
 ```{r}
 #| label: pride-prejudice
+#| echo: true
+#| message: false
+#| warning: false
 
 pride_prejudice <- tidy_books |> 
   filter(book == "Pride & Prejudice")
-
-
 ```
 
 #### Applying sentiment lexicons
 
 ```{r}
 #| label: sentiment-lexicons
+#| echo: true
+#| message: false
+#| warning: false
 
 afinn <- pride_prejudice |> 
   inner_join(get_sentiments("afinn"),
@@ -160,6 +175,10 @@ bing_and_nrc <- bind_rows(
 
 ```{r}
 #| label: lexicon-comparison
+#| echo: true
+#| message: false
+#| warning: false
+#| fig-cap: "Sentiment Trajectory Across Three Lexicons for Jane Austen's Novel Pride and Prejudice"
 
 bind_rows(afinn, 
           bing_and_nrc) |>
@@ -170,6 +189,9 @@ bind_rows(afinn,
 
 ```{r}
 #| label: lexicon-comparison-counts
+#| echo: true
+#| message: false
+#| warning: false
 
 get_sentiments("nrc") |> 
   filter(sentiment %in% c("positive", "negative")) |> 
@@ -181,6 +203,9 @@ get_sentiments("bing") |>
 
 ```{r}
 #| label: bing-pride-prejudice-counts
+#| echo: true
+#| message: false
+#| warning: false
 
 bing_word_counts <- tidy_books |>
   inner_join(get_sentiments("bing"),
@@ -194,6 +219,9 @@ bing_word_counts <- tidy_books |>
 
 ```{r}
 #| label: viz-bing-word-counts
+#| echo: true
+#| message: false
+#| warning: false 
 
 bing_word_counts |>
   group_by(sentiment) |>
@@ -211,6 +239,9 @@ bing_word_counts |>
 
 ```{r}
 #| label: stop-words
+#| echo: true
+#| message: false
+#| warning: false
 
 custom_stop_words <- bind_rows(tibble(word = c("miss"), lexicon = c("custom")), 
                                stop_words)
@@ -233,6 +264,13 @@ tidy_books |>
 ```
 
 ```{r}
+#| label: comparison-cloud-jane-austen
+#| echo: true
+#| message: false
+#| warning: false
+#| fig-cap: "Top negative and positive sentiment words in Jane Austen Books (Bing lexicon)."
+
+
 tidy_books |>
   inner_join(get_sentiments("bing"),
              by = join_by(word),
@@ -246,6 +284,10 @@ tidy_books |>
 ### Sentence Analysis
 
 ```{r}
+#| echo: true
+#| message: false
+#| warning: false
+
 p_and_p_sentences <- tibble(text = prideprejudice) |> 
   unnest_tokens(sentence, text, token = "sentences")
 
@@ -255,6 +297,10 @@ p_and_p_sentences$sentence[2]
 #### Summarize Jane Austen Chapters
 
 ```{r}
+#| echo: true
+#| message: false
+#| warning: false
+
 austen_chapters <- austen_books() |>
   group_by(book) |>
   unnest_tokens(chapter, text, token = "regex", 
@@ -269,6 +315,10 @@ austen_chapters |>
 #### Proportion of negative words in Chapter 34
 
 ```{r}
+#| echo: true
+#| message: false
+#| warning: false
+
 bingnegative <- get_sentiments("bing") |> 
   filter(sentiment == "negative")
 
@@ -295,26 +345,112 @@ tidy_books |>
 ### Data loading
 
 ```{r}
+#| label: library-load-wnba
+#| echo: false
+#| message: false
+#| warning: false
+
 library(tidyRSS)
+library(syuzhet)
 
 ```
 
 ```{r}
+#| label: data-load-espn
+#| echo: true
+#| message: false
+#| warning: false
 
 wnba_feed <- tidyfeed("https://www.espn.com/espn/rss/wnba/news")
 
 wnba_corpus <- wnba_feed |>
   select(title = item_title, text = item_description) |>
   mutate(full_text = paste(title, text))
+
+knitr::kable(head(wnba_corpus |>  select(title, text), 3))
 ```
 
 ```{r}
+#| label: std-theme
+#| echo:  false
+#| warning:  false
+#| message:  false
 
+theme_standard <- function(){
+  theme_minimal() +
+    theme(
+      plot.title.position = "plot",
+      plot.caption.position = "plot",
+      plot.title = element_text(size = 15, face = "bold"),
+      plot.subtitle = element_text(size = 13, face = "italic"),
+      axis.text.y = element_text(size = 11, face = "bold"),
+      axis.text.x = element_text(size = 11, face = "bold"),
+      axis.title.y = element_text(size = 12, face = "bold"),
+      axis.title.x = element_text(size = 12, face = "bold")
+    )
+}
 ```
 
-### Analysis
+### Analysis and Visualizations
 
-### Visualizations
+
+```{r}
+#| label: syuzhet-wnba
+#| echo: false
+#| warning: false
+#| message: false
+#| fig-cap: "Right Skewed Syuzhet Sentiment in WNBA News"
+
+wnba_corpus_syuzhet <- wnba_corpus |>
+  mutate(sentiment_score = get_sentiment(full_text, method = "syuzhet"))
+
+knitr::kable(head(wnba_corpus_syuzhet |>  select(title, text, sentiment_score), 3))
+
+wnba_corpus_syuzhet |> 
+  ggplot(aes(x = sentiment_score)) +
+  geom_histogram(binwidth = 0.5, fill = "#1d70b8", color = "white") +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "red", linewidth = 1) +
+  theme_minimal() +
+  labs(
+    title = "Right-Skewed Distribution of Syuzhet Sentiment Scores in WNBA News",
+    caption = "Dashed red line indicates neutral sentiment (0)",
+    x = "Sentiment Score (Negative < 0 < Positive)",
+    y = "Number of Articles"
+  )
+```
+
+```{r}
+#| label: words-wnba
+#| echo: false
+#| warning: false
+#| message: false
+#| fig-cap: "Most Frequent Sentiment Words in ESPN WNBA News"
+
+wnba_words <- wnba_corpus |>
+  unnest_tokens(word, full_text) |>
+  anti_join(stop_words, by = join_by(word))
+
+wnba_bing_counts <- wnba_words |>
+  inner_join(get_sentiments("bing"), 
+             by = join_by(word), 
+             relationship = "many-to-many") |>
+  count(word, sentiment, sort = TRUE)
+
+wnba_bing_counts |>
+  group_by(sentiment) |>
+  slice_max(n, n = 8) |>
+  ungroup() |>
+  mutate(word = reorder(word, n)) |>
+  ggplot(aes(n, word, fill = sentiment)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~sentiment, scales = "free_y") +
+  labs(
+    title = "Most Frequent Sentiment Words in ESPN WNBA News",
+    x = "Word Count",
+    y = NULL
+  )
+```
+
 
 ### Findings and Recommendations
 
