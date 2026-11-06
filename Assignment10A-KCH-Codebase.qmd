@@ -44,6 +44,8 @@ Second, the analysis is extended to a completely different corpus and domain: co
 
 ## Step 1: Replicate Sentiment Analysis Example
 
+The primary objective of this step is to reproduce the core findings of Chapter 2. Austen's text is tokenized into individual words, stripped of formatting metadata, and indexed into 80-line narrative segments to trace emotional progression.
+
 ### Data and library loading
 
 ```{r}
@@ -395,7 +397,6 @@ wnba_full_articles <- wnba_feed |>
   filter(!is.na(full_article_text))
 ```
 
-
 ```{r}
 #| label: std-theme
 #| echo:  false
@@ -418,7 +419,6 @@ theme_standard <- function(){
 ```
 
 ### Analysis and Visualizations
-
 
 ```{r}
 #| label: syuzhet-wnba
@@ -539,8 +539,6 @@ article_sentences |>
   theme_standard()
 
 ```
-
-
 
 ### Findings and Recommendations
 

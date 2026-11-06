@@ -16,23 +16,29 @@ bibliography: references.bib
 
 # Introduction and Overview
 
-In this assignment, the sentiment analysis will be performed in two steps.
+In this assignment, sentiment analysis is performed in two parts.
 
-In the first, an example workflow from Chapter 2 of *Text Mining with R* will be replicated @silge2017text [Chapter 2]. The original code and dataset can be accessed in the online book at [tidytextmining.com/sentiment](https://www.tidytextmining.com/sentiment.html).
+First, the workflow from Chapter 2 of *Text Mining with R* is replicated [@silge2017text]. Using Jane Austen's published novels, the tidy text approach is reproduced to accomplish sentiment extraction, lexicon comparison, word frequency contributions, and narrative trajectories. The original methodology and examples are referenced from the online text at [tidytextmining.com/sentiment](https://www.tidytextmining.com/sentiment.html).
 
-Then, the analysis will be extended to analyze a different text corpus, specifically the sentiment of WNBA fans in the WNBA subreddit [@r_wnba]. The `RedditExtractoR` package will be utilized to source the raw comment data, which was developed by @redditextractor.
+Second, the analysis is extended to a completely different corpus and domain: contemporary sports journalism covering the Women's National Basketball Association (WNBA). Using the `tidyRSS` package [@tidyRSS] and `rvest`, recent ESPN WNBA news coverage is harvested, and the full text of each reporting piece is scraped. Matthew Jockers' sentiment engine is app0lied via the `syuzhet` package [@syuzhet], evaluating both raw and length-normalized sentiment alongside traditional dictionary methods.
 
 # Approach
 
 1.  Replicate example workflow from Chapter 2 of *Text Mining with R*
 
-2.  Source raw r\\WNBA comment data using `RedditExtractoR`
+- Recreate the tidy sentiment mining workflow from Chapter 2 across Jane Austen's novels, demonstrating word-level and chapter-level sentiment analysis.
 
-3.  Apply new sentiment lexicons
+2.  Ingest and scrape ESPN's WNBA corpus
 
-    1.  VADER
+- Ingest live headlines from the ESPN WNBA RSS feed and programmatically scrape full article bodies using `rvest`.
 
-4.  Analyze WNBA comment data to identify trends in 2026 Playoffs
+3.  Incorporate an additional lexicon
+
+- Apply the `syuzhet` lexicon to score full articles and sentence-level narrative trajectories, comparing its behavior against the `bing` dictionary.
+
+4.  Evaluate domain Differences
+
+- Contrast the emotional dynamics of Jane Austen's novels with modern sports reporting, identifying domain-specific lexicon limitations and normalizing for document length.
 
 # Cited Works
 

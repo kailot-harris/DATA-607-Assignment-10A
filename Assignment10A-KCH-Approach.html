@@ -277,30 +277,45 @@ div.csl-indent {
 
 <section id="introduction-and-overview" class="level1">
 <h1>Introduction and Overview</h1>
-<p>In this assignment, the sentiment analysis will be performed in two steps.</p>
-<p>In the first, an example workflow from Chapter 2 of <em>Text Mining with R</em> will be replicated <span class="citation" data-cites="silge2017text">Silge and Robinson (<a href="#ref-silge2017text" role="doc-biblioref">2017, chap. 2</a>)</span>. The original code and dataset can be accessed in the online book at <a href="https://www.tidytextmining.com/sentiment.html">tidytextmining.com/sentiment</a>.</p>
-<p>Then, the analysis will be extended to analyze a different text corpus, specifically the sentiment of WNBA fans in the WNBA subreddit <span class="citation" data-cites="r_wnba">(<a href="#ref-r_wnba" role="doc-biblioref"><span class="nocase">r/wnba Community</span> 2026</a>)</span>. The <code>RedditExtractoR</code> package will be utilized to source the raw comment data, which was developed by <span class="citation" data-cites="redditextractor">Rivera (<a href="#ref-redditextractor" role="doc-biblioref">2023</a>)</span>.</p>
+<p>In this assignment, sentiment analysis is performed in two parts.</p>
+<p>First, the workflow from Chapter 2 of <em>Text Mining with R</em> is replicated <span class="citation" data-cites="silge2017text">(<a href="#ref-silge2017text" role="doc-biblioref">Silge and Robinson 2017</a>)</span>. Using Jane Austen’s published novels, the tidy text approach is reproduced to accomplish sentiment extraction, lexicon comparison, word frequency contributions, and narrative trajectories. The original methodology and examples are referenced from the online text at <a href="https://www.tidytextmining.com/sentiment.html">tidytextmining.com/sentiment</a>.</p>
+<p>Second, the analysis is extended to a completely different corpus and domain: contemporary sports journalism covering the Women’s National Basketball Association (WNBA). Using the <code>tidyRSS</code> package <span class="citation" data-cites="tidyRSS">(<a href="#ref-tidyRSS" role="doc-biblioref">McDonnell 2021</a>)</span> and <code>rvest</code>, recent ESPN WNBA news coverage is harvested, and the full text of each reporting piece is scraped. Matthew Jockers’ sentiment engine is app0lied via the <code>syuzhet</code> package <span class="citation" data-cites="syuzhet">(<a href="#ref-syuzhet" role="doc-biblioref">Jockers 2020</a>)</span>, evaluating both raw and length-normalized sentiment alongside traditional dictionary methods.</p>
 </section>
 <section id="approach" class="level1">
 <h1>Approach</h1>
 <ol type="1">
-<li><p>Replicate example workflow from Chapter 2 of <em>Text Mining with R</em></p></li>
-<li><p>Source raw r\WNBA comment data using <code>RedditExtractoR</code></p></li>
-<li><p>Apply new sentiment lexicons</p>
-<ol type="1">
-<li>VADER</li>
-</ol></li>
-<li><p>Analyze WNBA comment data to identify trends in 2026 Playoffs</p></li>
+<li>Replicate example workflow from Chapter 2 of <em>Text Mining with R</em></li>
 </ol>
+<ul>
+<li>Recreate the tidy sentiment mining workflow from Chapter 2 across Jane Austen’s novels, demonstrating word-level and chapter-level sentiment analysis.</li>
+</ul>
+<ol start="2" type="1">
+<li>Ingest and scrape ESPN’s WNBA corpus</li>
+</ol>
+<ul>
+<li>Ingest live headlines from the ESPN WNBA RSS feed and programmatically scrape full article bodies using <code>rvest</code>.</li>
+</ul>
+<ol start="3" type="1">
+<li>Incorporate an additional lexicon</li>
+</ol>
+<ul>
+<li>Apply the <code>syuzhet</code> lexicon to score full articles and sentence-level narrative trajectories, comparing its behavior against the <code>bing</code> dictionary.</li>
+</ul>
+<ol start="4" type="1">
+<li>Evaluate domain Differences</li>
+</ol>
+<ul>
+<li>Contrast the emotional dynamics of Jane Austen’s novels with modern sports reporting, identifying domain-specific lexicon limitations and normalizing for document length.</li>
+</ul>
 </section>
 <section id="cited-works" class="level1">
 <h1>Cited Works</h1>
 <div id="refs" class="references csl-bib-body hanging-indent" role="list">
-<div id="ref-redditextractor" class="csl-entry" role="listitem">
-Rivera, Ivan. 2023. <em>RedditExtractoR: Reddit Data Extraction Toolkit</em>. <a href="https://CRAN.R-project.org/package=RedditExtractoR">https://CRAN.R-project.org/package=RedditExtractoR</a>.
+<div id="ref-syuzhet" class="csl-entry" role="listitem">
+Jockers, Matthew L. 2020. <em>Syuzhet: Extracts Sentiment and Sentiment-Derived Plot Arcs from Text</em>. <a href="https://CRAN.R-project.org/package=syuzhet">https://CRAN.R-project.org/package=syuzhet</a>.
 </div>
-<div id="ref-r_wnba" class="csl-entry" role="listitem">
-<span class="nocase">r/wnba Community</span>. 2026. <em>R/Wnba: The Women’s National Basketball Association Subreddit</em>. <a href="https://www.reddit.com/r/wnba/" class="uri">Https://www.reddit.com/r/wnba/</a>.
+<div id="ref-tidyRSS" class="csl-entry" role="listitem">
+McDonnell, Robert Myles. 2021. <em>tidyRSS: Tidy RSS for r</em>. <a href="https://CRAN.R-project.org/package=tidyRSS">https://CRAN.R-project.org/package=tidyRSS</a>.
 </div>
 <div id="ref-silge2017text" class="csl-entry" role="listitem">
 Silge, Julia, and David Robinson. 2017. <em>Text Mining with r: A Tidy Approach</em>. O’Reilly Media. <a href="https://www.tidytextmining.com/">https://www.tidytextmining.com/</a>.
