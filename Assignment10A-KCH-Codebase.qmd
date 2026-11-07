@@ -348,7 +348,11 @@ tidy_books |>
   ungroup()
 ```
 
+The reproduction confirms the findings from Chapter 2: Chapter 34 of *Pride & Prejudice* contains the highest concentration of negative words (5.28%) across all six novels.
+
 ## Step 2: Extension to ESPN's WNBA News
+
+While RSS feeds provide immediate, structured access to media headlines, RSS descriptions are typically restricted to short teaser blurbs. To create a rich corpus suitable for narrative-level analysis, we use the article hyperlinks embedded in the feed to programmatically extract the complete paragraph text (`<p>`) from ESPN's website.
 
 ### Data loading
 
@@ -419,6 +423,14 @@ theme_standard <- function(){
 ```
 
 ### Analysis and Visualizations
+
+To evaluate the sports corpus, three distinct analyses are executed:
+
+1\. Measuring overall polarity using Matthew Jockers' `syuzhet` dictionary.
+
+2\. Extracting the most frequent positive and negative sentiment drivers via `bing`.
+
+3\. Scaling sentiment by word count to remove length bias, and plotting the sentence-by-sentence narrative arc of the longest feature story.
 
 ```{r}
 #| label: syuzhet-wnba
@@ -531,8 +543,8 @@ article_sentences |>
               color = "orange") +
   theme_minimal() +
   labs(
-    title = paste("Sentiment Trajectory:", stringr::str_trunc(longest_article$title, 30)),
-    subtitle = "Tracking sentence-by-sentence emotion across the article",
+    title = "Sentiment Trajectory:",
+    subtitle = paste(stringr::str_trunc(longest_article$title, 90)),
     x = "Sentence Number (Beginning to End)",
     y = "Sentence Sentiment"
   ) +
@@ -541,6 +553,20 @@ article_sentences |>
 ```
 
 ### Findings and Recommendations
+
+In this work, a sentiment analysis workflow was replicated from Chapter 2 of *Text Mining with R* [@silge2017text]. The workflow was then modified for analysis of modern sports media, particularly coverage of the WNBA by ESPN (). Comparing Victorian literature to contemporary sports writing reveals significant differences in corpus tone, lexicon accuracy, and structural length.
+
+In Jane Austen’s novels, sentiment trajectories fluctuate dramatically above and below zero, capturing the emotional rhythm of the novels. In contrast, the ESPN WNBA corpus is overwhelmingly right-skewed and positive. Every single article evaluated via the \`syuzhet\` lexicon produced a net positive score.
+
+This reflects the editorial cycle of modern sports journalism: following the conclusion of the WNBA Finals, reporting naturally pivots away from high-stakes game conflict writing to celebratory features, expansion team anticipation, mock drafts, and historical championship rankings.
+
+A central takeaway from Chapter 2 of *Text Mining with R* is that generic sentiment dictionaries struggle when words have domain-specific connotations (e.g., the word *"miss"* in Austen's works) [@silge2017text]. This issue is magnified in sports analytics when using the `bing` lexicon. Words such as *"foul"*, *"loss"*, *"cold"*, and *"offensive"* are flagged as negative. While negative in everyday language, in basketball these are standard, neutral descriptors of tactical gameplay. Words like *"lead"*, *"award"*, *"championship"*, and *"top"* dominate the positive counts, reinforcing the aspirational tone of sports feature journalism.
+
+In the raw Syuzhet scoring, article sentiment scores ranged from $+1$ to over $+35$. However, this variance was largely driven by document length rather than emotional intensity: longer investigative pieces accumulated dozens of mild positive words simply by volume.
+
+By implementing a length-normalized sentiment metric ($\frac{\text{Sentiment Score}}{\text{Word Count}} \times 100$), a more apt comparison could be made. This demonstrated that shorter, punchy headlines often possessed higher per-word emotional density than multi-page retrospectives.
+
+This work could be extended in two key ways. First, future sports text mining should establish a domain-specific exclusion list that neutralizes terms like *"steal"*, *"foul"*, and *"turnover"*. Second, rather than scoring entire articles, combining sentiment scoring with Named Entity Recognition (NER) would allow researchers to separate fan sentiment toward specific players (e.g., Caitlin Clark or Breanna Stewart) from general game reporting.
 
 # Cited Works
 
