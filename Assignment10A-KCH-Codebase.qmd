@@ -581,7 +581,11 @@ article_sentences |>
 
 ```
 
-The trajectory plot reveals a classic sports feature structure: an optimistic introductory hook, a mid-article dip where past setbacks, playoff struggles, and player injuries are recounted, and a rebound into strong positive territory driven by triumphant quotes looking toward the future.
+The trajectory plot reflects the analytical, comparative structure of a sports ranking listicle:
+
+- Celebratory Opening: The curve begins in elevated positive territory as the author introduces the newly crowned champion (the Valkyries) and establishes the criteria for all-time great teams.
+- Balanced Evaluation: Across sentences 40 to 160, sentiment oscillates evenly around a modest baseline, balancing praise with critique across decades of past champions.
+- Critique and Conclusions: Rather than a triumphant rebound, the LOESS curve drifts downward and dips slightly below zero near sentence 200. In sports ranking retrospectives, lower-ranked championship teams are routinely evaluated by their flaws (such as poor regular-season win percentages, playoff close-calls, or roster limitations) compared to dominant dynasties.
 
 ### Findings and Recommendations
 

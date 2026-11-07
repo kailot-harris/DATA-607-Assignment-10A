@@ -751,9 +751,10 @@ Figure&nbsp;1: Sentiment Trajectory Across Jane Austen Novels Using Bing lexicon
 </section>
 <section id="step-2-extension-to-espns-wnba-news" class="level2">
 <h2 class="anchored" data-anchor-id="step-2-extension-to-espns-wnba-news">Step 2: Extension to ESPN’s WNBA News</h2>
-<p>While RSS feeds provide immediate, structured access to media headlines, RSS descriptions are typically restricted to short teaser blurbs. To create a rich corpus suitable for narrative-level analysis, we use the article hyperlinks embedded in the feed to programmatically extract the complete paragraph text (<code>&lt;p&gt;</code>) from ESPN’s website.</p>
+<p>While RSS feeds provide immediate, structured access to media headlines, RSS descriptions are typically restricted to short teaser blurbs. To create a rich corpus suitable for narrative-level analysis, the article hyperlinks embedded in the feed are used to extract the complete paragraph text (<code>&lt;p&gt;</code>) from ESPN’s website.</p>
 <section id="data-loading" class="level3">
 <h3 class="anchored" data-anchor-id="data-loading">Data loading</h3>
+<p>Real-time media analysis begins with data collection. The <code>tidyRSS</code> package <span class="citation" data-cites="tidyRSS">(<a href="#ref-tidyRSS" role="doc-biblioref">McDonnell 2021</a>)</span> is used to query ESPN’s live WNBA RSS endpoint. While RSS feeds provide structured access to new stories, the feed itself contains only article headlines and brief teaser descriptions.</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
@@ -794,6 +795,9 @@ Figure&nbsp;1: Sentiment Trajectory Across Jane Austen Novels Using Bing lexicon
 </table>
 </div>
 </div>
+To achieve an analytical depth comparable to the full-length chapters analyzed in Jane Austen’s novels, we cannot rely solely on 30-word summary blurbs. Using the canonical URLs captured in the item_link column, we build a custom web scraper using rvest to extract all paragraph elements (
+<p>
+</p><p>) from the body of each reporting piece. A tryCatch wrapper is included to handle potential network timeouts or paywall redirects gracefully, ensuring the Quarto document compiles cleanly without breaking if an individual link fails.</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
@@ -821,6 +825,7 @@ Figure&nbsp;1: Sentiment Trajectory Across Jane Austen Novels Using Bing lexicon
 <p>1. Measuring overall polarity using Matthew Jockers’ <code>syuzhet</code> dictionary.</p>
 <p>2. Extracting the most frequent positive and negative sentiment drivers via <code>bing</code>.</p>
 <p>3. Scaling sentiment by word count to remove length bias, and plotting the sentence-by-sentence narrative arc of the longest feature story.</p>
+<p>First, evaluating the initial feed text using the syuzhet lexicon <span class="citation" data-cites="syuzhet">(<a href="#ref-syuzhet" role="doc-biblioref">Jockers 2020</a>)</span> is undertaken. Unlike binary dictionaries that simply tally words, the Syuzhet engine assigns continuous emotional valence to sentences and short texts.</p>
 <div class="cell">
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
@@ -865,6 +870,8 @@ Figure&nbsp;1: Sentiment Trajectory Across Jane Austen Novels Using Bing lexicon
 </div>
 </div>
 </div>
+<p>As visualized in the histogram above ( <span class="citation" data-cites="syuzhet-wnba">(<a href="#ref-syuzhet-wnba" role="doc-biblioref"><strong>syuzhet-wnba?</strong></a>)</span>), the distribution of sentiment across WNBA headlines is strongly right-skewed. Every single article in the feed scores above the neutral baseline (red dashed line at zero). Even articles discussing team struggles or player recoveries are framed through a positive editorial lens (e.g., highlighting resilience or historic milestones).</p>
+<p>To understand which terms drive this positivity, Chapter 2’s tokenization and join methodology is mirrored. The full-text corpus is unnsted into individual words, common stop words are stripped, and the corpus is joined against the bing lexicon to evaluate word-level contribution.</p>
 <div class="cell">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
@@ -875,33 +882,50 @@ Figure&nbsp;1: Sentiment Trajectory Across Jane Austen Novels Using Bing lexicon
 </div>
 </div>
 </div>
+<p>The word contribution plot ( <span class="citation" data-cites="words-wnba">(<a href="#ref-words-wnba" role="doc-biblioref"><strong>words-wnba?</strong></a>)</span> ) illustrates both the strengths and the inherent limitations of using general-purpose lexicons on specialized sports data. First, terms like “lead”, “award”, “championship”, and “top” dominate the positive facet, reflecting celebratory coverage of seasonal awards and championship milestones. Second, terms like “loss”, “foul”, “cold”, and “offensive” heavily populate the negative facet. In sports analytics, these are neutral, mechanical descriptors of play rather than indicators of genuine negative sentiment. This parallels Silge &amp; Robinson’s finding regarding the word “miss” in Austen’s novels.</p>
+<p>When analyzing long-form journalism, raw cumulative sentiment is inherently confounded by article length: a 2,500-word feature story will naturally amass a higher total score than a 250-word roster bulletin simply due to word volume. To resolve this length bias, we compute a length-normalized sentiment index:</p>
+<p><span class="math inline">\(Normalized Score=\frac{Syuzhet Cumulative Sentiment}{Total Word Count }×100\)</span></p>
+<p>This represents the net emotional valence per 100 words of prose.</p>
+<div class="cell">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="Assignment10A-KCH-Codebase_files/figure-html/wnba-normalized-scores-1.png" class="img-fluid figure-img" width="672"></p>
+<figcaption>WNBA News Displays Postseason Bliss (Syuzhet Lexicon)</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Normalizing by length reveals that the highest sentiment concentrations belong to forward-looking, celebratory headlines (such as championship parade reporting and franchise dynasty declarations). Even after adjusting for document length, every single article remains net positive, highlighting the pervasive promotional optimism of the WNBA offseason media cycle.</p>
+<p>In Chapter 2, Silge and Robinson demonstrated how Austen’s novels can be viewed as narrative arcs with emotional peaks and valleys. To determine whether modern sports journalism exhibits similar narrative arcs, the longest article in the corpus is isolate, segmented it into individual sentences, and then sentence-level sentiment progression from start to finish can be tracked. A LOESS smoothing curve is overlaid to capture the underlying emotional trajectory.</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>wnba_scored <span class="ot">&lt;-</span> wnba_full_articles <span class="sc">|&gt;</span></span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">article_id =</span> <span class="fu">row_number</span>(),</span>
-<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">clean_title =</span> stringr<span class="sc">::</span><span class="fu">str_replace_all</span>(title, <span class="st">"[^</span><span class="sc">\x01</span><span class="st">-</span><span class="sc">\x7F</span><span class="st">]+"</span>, <span class="st">""</span>),</span>
-<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">short_title =</span> stringr<span class="sc">::</span><span class="fu">str_trunc</span>(clean_title, <span class="dv">25</span>),</span>
-<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>     <span class="at">word_count =</span> stringr<span class="sc">::</span><span class="fu">str_count</span>(full_article_text, <span class="st">"</span><span class="sc">\\</span><span class="st">w+"</span>),</span>
-<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">sentiment_score =</span> <span class="fu">get_sentiment</span>(full_article_text, <span class="at">method =</span> <span class="st">"syuzhet"</span>),</span>
-<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">sentiment_normalized =</span> (sentiment_score <span class="sc">/</span> word_count) <span class="sc">*</span> <span class="dv">100</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>longest_article <span class="ot">&lt;-</span> wnba_full_articles <span class="sc">|&gt;</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_max</span>(<span class="fu">nchar</span>(full_article_text), <span class="at">n =</span> <span class="dv">1</span>)</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>article_sentences <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">text =</span> longest_article<span class="sc">$</span>full_article_text) <span class="sc">|&gt;</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unnest_tokens</span>(sentence, text, <span class="at">token =</span> <span class="st">"sentences"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">sentence_num =</span> <span class="fu">row_number</span>(),</span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">sentiment =</span> <span class="fu">get_sentiment</span>(sentence, <span class="at">method =</span> <span class="st">"syuzhet"</span>)</span>
 <span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>  )</span>
 <span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a>wnba_scored <span class="sc">|&gt;</span> </span>
-<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> <span class="fu">reorder</span>(short_title, sentiment_normalized), </span>
-<span id="cb26-13"><a href="#cb26-13" aria-hidden="true" tabindex="-1"></a>             <span class="at">y =</span> sentiment_normalized, </span>
-<span id="cb26-14"><a href="#cb26-14" aria-hidden="true" tabindex="-1"></a>             <span class="at">fill =</span> sentiment_score <span class="sc">&gt;</span> <span class="dv">0</span>)) <span class="sc">+</span></span>
-<span id="cb26-15"><a href="#cb26-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">show.legend =</span> <span class="cn">FALSE</span>) <span class="sc">+</span></span>
-<span id="cb26-16"><a href="#cb26-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_flip</span>() <span class="sc">+</span></span>
-<span id="cb26-17"><a href="#cb26-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"TRUE"</span> <span class="ot">=</span> <span class="st">"#2ca02c"</span>, <span class="st">"FALSE"</span> <span class="ot">=</span> <span class="st">"#d62728"</span>)) <span class="sc">+</span></span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a>article_sentences <span class="sc">|&gt;</span> </span>
+<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> sentence_num, <span class="at">y =</span> sentiment)) <span class="sc">+</span></span>
+<span id="cb26-13"><a href="#cb26-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">fill =</span> <span class="st">"steelblue"</span>) <span class="sc">+</span></span>
+<span id="cb26-14"><a href="#cb26-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">'loess'</span>, </span>
+<span id="cb26-15"><a href="#cb26-15" aria-hidden="true" tabindex="-1"></a>              <span class="at">formula =</span> <span class="st">'y ~ x'</span>, </span>
+<span id="cb26-16"><a href="#cb26-16" aria-hidden="true" tabindex="-1"></a>              <span class="at">se =</span> <span class="cn">FALSE</span>, </span>
+<span id="cb26-17"><a href="#cb26-17" aria-hidden="true" tabindex="-1"></a>              <span class="at">color =</span> <span class="st">"orange"</span>) <span class="sc">+</span></span>
 <span id="cb26-18"><a href="#cb26-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
 <span id="cb26-19"><a href="#cb26-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
-<span id="cb26-20"><a href="#cb26-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"WNBA News Displays Postseason Bliss (Syuzhet Lexicon)"</span>,</span>
-<span id="cb26-21"><a href="#cb26-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="cn">NULL</span>,</span>
-<span id="cb26-22"><a href="#cb26-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Net Sentiment Score (Green = Positive, Red = Negative)"</span></span>
-<span id="cb26-23"><a href="#cb26-23" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb26-24"><a href="#cb26-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_standard</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb26-20"><a href="#cb26-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Sentiment Trajectory:"</span>,</span>
+<span id="cb26-21"><a href="#cb26-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="fu">paste</span>(stringr<span class="sc">::</span><span class="fu">str_trunc</span>(longest_article<span class="sc">$</span>title, <span class="dv">90</span>)),</span>
+<span id="cb26-22"><a href="#cb26-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Sentence Number (Beginning to End)"</span>,</span>
+<span id="cb26-23"><a href="#cb26-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Sentence Sentiment"</span></span>
+<span id="cb26-24"><a href="#cb26-24" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb26-25"><a href="#cb26-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_standard</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output-display">
 <div>
@@ -911,43 +935,12 @@ Figure&nbsp;1: Sentiment Trajectory Across Jane Austen Novels Using Bing lexicon
 </div>
 </div>
 </div>
-<div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>longest_article <span class="ot">&lt;-</span> wnba_full_articles <span class="sc">|&gt;</span></span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice_max</span>(<span class="fu">nchar</span>(full_article_text), <span class="at">n =</span> <span class="dv">1</span>)</span>
-<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>article_sentences <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">text =</span> longest_article<span class="sc">$</span>full_article_text) <span class="sc">|&gt;</span></span>
-<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unnest_tokens</span>(sentence, text, <span class="at">token =</span> <span class="st">"sentences"</span>) <span class="sc">|&gt;</span></span>
-<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">sentence_num =</span> <span class="fu">row_number</span>(),</span>
-<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">sentiment =</span> <span class="fu">get_sentiment</span>(sentence, <span class="at">method =</span> <span class="st">"syuzhet"</span>)</span>
-<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>article_sentences <span class="sc">|&gt;</span> </span>
-<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> sentence_num, <span class="at">y =</span> sentiment)) <span class="sc">+</span></span>
-<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">fill =</span> <span class="st">"steelblue"</span>) <span class="sc">+</span></span>
-<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">'loess'</span>, </span>
-<span id="cb27-15"><a href="#cb27-15" aria-hidden="true" tabindex="-1"></a>              <span class="at">formula =</span> <span class="st">'y ~ x'</span>, </span>
-<span id="cb27-16"><a href="#cb27-16" aria-hidden="true" tabindex="-1"></a>              <span class="at">se =</span> <span class="cn">FALSE</span>, </span>
-<span id="cb27-17"><a href="#cb27-17" aria-hidden="true" tabindex="-1"></a>              <span class="at">color =</span> <span class="st">"orange"</span>) <span class="sc">+</span></span>
-<span id="cb27-18"><a href="#cb27-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
-<span id="cb27-19"><a href="#cb27-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
-<span id="cb27-20"><a href="#cb27-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Sentiment Trajectory:"</span>,</span>
-<span id="cb27-21"><a href="#cb27-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="fu">paste</span>(stringr<span class="sc">::</span><span class="fu">str_trunc</span>(longest_article<span class="sc">$</span>title, <span class="dv">90</span>)),</span>
-<span id="cb27-22"><a href="#cb27-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Sentence Number (Beginning to End)"</span>,</span>
-<span id="cb27-23"><a href="#cb27-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Sentence Sentiment"</span></span>
-<span id="cb27-24"><a href="#cb27-24" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb27-25"><a href="#cb27-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_standard</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="Assignment10A-KCH-Codebase_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" width="672"></p>
-</figure>
-</div>
-</div>
-</div>
+<p>The trajectory plot reflects the analytical, comparative structure of a sports ranking listicle:</p>
+<ul>
+<li>Celebratory Opening: The curve begins in elevated positive territory as the author introduces the newly crowned champion (the Valkyries) and establishes the criteria for all-time great teams.</li>
+<li>Balanced Evaluation: Across sentences 40 to 160, sentiment oscillates evenly around a modest baseline, balancing praise with critique across decades of past champions.</li>
+<li>Critique and Conclusions: Rather than a triumphant rebound, the LOESS curve drifts downward and dips slightly below zero near sentence 200. In sports ranking retrospectives, lower-ranked championship teams are routinely evaluated by their flaws (such as poor regular-season win percentages, playoff close-calls, or roster limitations) compared to dominant dynasties.</li>
+</ul>
 </section>
 <section id="findings-and-recommendations" class="level3">
 <h3 class="anchored" data-anchor-id="findings-and-recommendations">Findings and Recommendations</h3>
