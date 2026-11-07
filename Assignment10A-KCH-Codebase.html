@@ -99,6 +99,35 @@ div.csl-indent {
 <link href="Assignment10A-KCH-Codebase_files/libs/bootstrap/bootstrap-b7e5477073de7410311bbbfdd309c8e4.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
 <link href="Assignment10A-KCH-Codebase_files/libs/bootstrap/bootstrap-dark-5f24cf023e044cee6f6f78646bcc928e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
 
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 </head>
 
@@ -331,26 +360,42 @@ div.csl-indent {
 
 <section id="introduction-and-overview" class="level1">
 <h1>Introduction and Overview</h1>
-<p>In this assignment, the sentiment analysis will be performed in two steps.</p>
-<p>In the first, an example workflow from Chapter 2 of <em>Text Mining with R</em> will be replicated <span class="citation" data-cites="silge2017text">Silge and Robinson (<a href="#ref-silge2017text" role="doc-biblioref">2017, chap. 2</a>)</span>. The original code and dataset can be accessed in the online book at <a href="https://www.tidytextmining.com/sentiment.html">tidytextmining.com/sentiment</a>.</p>
-<p>Then, the analysis will be extended to analyze a different text corpus, specifically the sentiment of comments on ESPN articles in the WNBA domain<span class="citation" data-cites="espn_wnba">(<a href="#ref-espn_wnba" role="doc-biblioref">ESPN Inc. 2024</a>)</span>. The <code>TidyRSS</code> package will be utilized to source the raw comment data, which was developed by <span class="citation" data-cites="TidyRSS">(<a href="#ref-TidyRSS" role="doc-biblioref"><strong>TidyRSS?</strong></a>)</span>.</p>
+<p>In this assignment, sentiment analysis is performed in two parts.</p>
+<p>First, the workflow from Chapter 2 of <em>Text Mining with R</em> is replicated <span class="citation" data-cites="silge2017text">(<a href="#ref-silge2017text" role="doc-biblioref">Silge and Robinson 2017</a>)</span>. Using Jane Austen’s published novels, the tidy text approach is reproduced to accomplish sentiment extraction, lexicon comparison, word frequency contributions, and narrative trajectories. The original methodology and examples are referenced from the online text at <a href="https://www.tidytextmining.com/sentiment.html">tidytextmining.com/sentiment</a>.</p>
+<p>Second, the analysis is extended to a completely different corpus and domain: contemporary sports journalism covering the Women’s National Basketball Association (WNBA). Using the <code>tidyRSS</code> package <span class="citation" data-cites="tidyRSS">(<a href="#ref-tidyRSS" role="doc-biblioref">McDonnell 2021</a>)</span> and <code>rvest</code>, recent ESPN WNBA news coverage is harvested, and the full text of each reporting piece is scraped. Matthew Jockers’ sentiment engine is app0lied via the <code>syuzhet</code> package <span class="citation" data-cites="syuzhet">(<a href="#ref-syuzhet" role="doc-biblioref">Jockers 2020</a>)</span>, evaluating both raw and length-normalized sentiment alongside traditional dictionary methods.</p>
 </section>
 <section id="approach" class="level1">
 <h1>Approach</h1>
 <ol type="1">
-<li><p>Replicate example workflow from Chapter 2 of <em>Text Mining with R</em></p></li>
-<li><p>Source raw comments data from ESPN articles concerning the WNBA</p></li>
-<li><p>Apply new sentiment lexicons</p>
-<ol type="1">
-<li>VADER</li>
-</ol></li>
-<li><p>Analyze WNBA comment data to identify trends in 2026 Playoffs</p></li>
+<li>Replicate example workflow from Chapter 2 of <em>Text Mining with R</em></li>
 </ol>
+<ul>
+<li>Recreate the tidy sentiment mining workflow from Chapter 2 across Jane Austen’s novels, demonstrating word-level and chapter-level sentiment analysis.</li>
+</ul>
+<ol start="2" type="1">
+<li>Ingest and scrape ESPN’s WNBA corpus</li>
+</ol>
+<ul>
+<li>Ingest live headlines from the ESPN WNBA RSS feed and programmatically scrape full article bodies using <code>rvest</code>.</li>
+</ul>
+<ol start="3" type="1">
+<li>Incorporate an additional lexicon</li>
+</ol>
+<ul>
+<li>Apply the <code>syuzhet</code> lexicon to score full articles and sentence-level narrative trajectories, comparing its behavior against the <code>bing</code> dictionary.</li>
+</ul>
+<ol start="4" type="1">
+<li>Evaluate domain Differences</li>
+</ol>
+<ul>
+<li>Contrast the emotional dynamics of Jane Austen’s novels with modern sports reporting, identifying domain-specific lexicon limitations and normalizing for document length.</li>
+</ul>
 </section>
 <section id="codebase" class="level1">
 <h1>Codebase</h1>
 <section id="step-1-replicate-sentiment-analysis-example" class="level2">
 <h2 class="anchored" data-anchor-id="step-1-replicate-sentiment-analysis-example">Step 1: Replicate Sentiment Analysis Example</h2>
+<p>The primary objective of this step is to reproduce the core findings of Chapter 2. Austen’s text is tokenized into individual words, stripped of formatting metadata, and indexed into 80-line narrative segments to trace emotional progression.</p>
 <section id="data-and-library-loading" class="level3">
 <h3 class="anchored" data-anchor-id="data-and-library-loading">Data and library loading</h3>
 </section>
@@ -700,11 +745,13 @@ Figure&nbsp;1: Sentiment Trajectory Across Jane Austen Novels Using Bing lexicon
 6 Persuasion                4            62  1807 0.0343</code></pre>
 </div>
 </div>
+<p>The reproduction confirms the findings from Chapter 2: Chapter 34 of <em>Pride &amp; Prejudice</em> contains the highest concentration of negative words (5.28%) across all six novels.</p>
 </section>
 </section>
 </section>
 <section id="step-2-extension-to-espns-wnba-news" class="level2">
 <h2 class="anchored" data-anchor-id="step-2-extension-to-espns-wnba-news">Step 2: Extension to ESPN’s WNBA News</h2>
+<p>While RSS feeds provide immediate, structured access to media headlines, RSS descriptions are typically restricted to short teaser blurbs. To create a rich corpus suitable for narrative-level analysis, we use the article hyperlinks embedded in the feed to programmatically extract the complete paragraph text (<code>&lt;p&gt;</code>) from ESPN’s website.</p>
 <section id="data-loading" class="level3">
 <h3 class="anchored" data-anchor-id="data-loading">Data loading</h3>
 <div class="cell">
@@ -721,8 +768,8 @@ Figure&nbsp;1: Sentiment Trajectory Across Jane Austen Novels Using Bing lexicon
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <colgroup>
-<col style="width: 33%">
-<col style="width: 66%">
+<col style="width: 31%">
+<col style="width: 68%">
 </colgroup>
 <thead>
 <tr class="header">
@@ -732,16 +779,16 @@ Figure&nbsp;1: Sentiment Trajectory Across Jane Austen Novels Using Bing lexicon
 </thead>
 <tbody>
 <tr class="odd">
-<td style="text-align: left;">Potential candidates, offseason priorities for New York Liberty after Chris DeMarco exit</td>
-<td style="text-align: left;">The Liberty are now searching for a coach for a second straight offseason. What went wrong, and what’s next?</td>
+<td style="text-align: left;">How the Dream went from bottom dwellers to the WNBA Finals in five years</td>
+<td style="text-align: left;">Five years ago, the Dream were the second-worst team in the WNBA – making their Finals run all the more remarkable.</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">WNBA coaching tracker for 2027: DeMarco out in New York</td>
-<td style="text-align: left;">The WNBA offseason begins with two big openings in Los Angeles and New York.</td>
+<td style="text-align: left;">Valkyries’ title brings estimated 400,000 fans to parade</td>
+<td style="text-align: left;">Feel and relive the best moments from the Valkyries’ first championship parade in franchise history.</td>
 </tr>
 <tr class="odd">
-<td style="text-align: left;">Unrivaled reveals Season 3 rosters as Stewart back to defend title with Mist</td>
-<td style="text-align: left;">Back for its third season, Unrivaled unveiled its rosters Tuesday night, with Breanna Stewart, Arike Ogunbowale and Veronica Burton returning for defending champion Mist BC.</td>
+<td style="text-align: left;">Exes in Texas: Wings’ Fudd, Bueckers discuss relationship on pod</td>
+<td style="text-align: left;">Azzi Fudd hosted Wings teammate Paige Bueckers on her podcast and the two discussed their relationship, Dallas’ season and Fudd’s recovery from knee surgery.</td>
 </tr>
 </tbody>
 </table>
@@ -770,13 +817,17 @@ Figure&nbsp;1: Sentiment Trajectory Across Jane Austen Novels Using Bing lexicon
 </section>
 <section id="analysis-and-visualizations" class="level3">
 <h3 class="anchored" data-anchor-id="analysis-and-visualizations">Analysis and Visualizations</h3>
+<p>To evaluate the sports corpus, three distinct analyses are executed:</p>
+<p>1. Measuring overall polarity using Matthew Jockers’ <code>syuzhet</code> dictionary.</p>
+<p>2. Extracting the most frequent positive and negative sentiment drivers via <code>bing</code>.</p>
+<p>3. Scaling sentiment by word count to remove length bias, and plotting the sentence-by-sentence narrative arc of the longest feature story.</p>
 <div class="cell">
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <colgroup>
-<col style="width: 31%">
-<col style="width: 62%">
-<col style="width: 5%">
+<col style="width: 29%">
+<col style="width: 63%">
+<col style="width: 6%">
 </colgroup>
 <thead>
 <tr class="header">
@@ -787,19 +838,19 @@ Figure&nbsp;1: Sentiment Trajectory Across Jane Austen Novels Using Bing lexicon
 </thead>
 <tbody>
 <tr class="odd">
-<td style="text-align: left;">Potential candidates, offseason priorities for New York Liberty after Chris DeMarco exit</td>
-<td style="text-align: left;">The Liberty are now searching for a coach for a second straight offseason. What went wrong, and what’s next?</td>
-<td style="text-align: right;">1.15</td>
+<td style="text-align: left;">How the Dream went from bottom dwellers to the WNBA Finals in five years</td>
+<td style="text-align: left;">Five years ago, the Dream were the second-worst team in the WNBA – making their Finals run all the more remarkable.</td>
+<td style="text-align: right;">1.00</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">WNBA coaching tracker for 2027: DeMarco out in New York</td>
-<td style="text-align: left;">The WNBA offseason begins with two big openings in Los Angeles and New York.</td>
-<td style="text-align: right;">1.05</td>
+<td style="text-align: left;">Valkyries’ title brings estimated 400,000 fans to parade</td>
+<td style="text-align: left;">Feel and relive the best moments from the Valkyries’ first championship parade in franchise history.</td>
+<td style="text-align: right;">1.10</td>
 </tr>
 <tr class="odd">
-<td style="text-align: left;">Unrivaled reveals Season 3 rosters as Stewart back to defend title with Mist</td>
-<td style="text-align: left;">Back for its third season, Unrivaled unveiled its rosters Tuesday night, with Breanna Stewart, Arike Ogunbowale and Veronica Burton returning for defending champion Mist BC.</td>
-<td style="text-align: right;">1.15</td>
+<td style="text-align: left;">Exes in Texas: Wings’ Fudd, Bueckers discuss relationship on pod</td>
+<td style="text-align: left;">Azzi Fudd hosted Wings teammate Paige Bueckers on her podcast and the two discussed their relationship, Dallas’ season and Fudd’s recovery from knee surgery.</td>
+<td style="text-align: right;">0.25</td>
 </tr>
 </tbody>
 </table>
@@ -882,8 +933,8 @@ Figure&nbsp;1: Sentiment Trajectory Across Jane Austen Novels Using Bing lexicon
 <span id="cb27-17"><a href="#cb27-17" aria-hidden="true" tabindex="-1"></a>              <span class="at">color =</span> <span class="st">"orange"</span>) <span class="sc">+</span></span>
 <span id="cb27-18"><a href="#cb27-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
 <span id="cb27-19"><a href="#cb27-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
-<span id="cb27-20"><a href="#cb27-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="fu">paste</span>(<span class="st">"Sentiment Trajectory:"</span>, stringr<span class="sc">::</span><span class="fu">str_trunc</span>(longest_article<span class="sc">$</span>title, <span class="dv">30</span>)),</span>
-<span id="cb27-21"><a href="#cb27-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Tracking sentence-by-sentence emotion across the article"</span>,</span>
+<span id="cb27-20"><a href="#cb27-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Sentiment Trajectory:"</span>,</span>
+<span id="cb27-21"><a href="#cb27-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="fu">paste</span>(stringr<span class="sc">::</span><span class="fu">str_trunc</span>(longest_article<span class="sc">$</span>title, <span class="dv">90</span>)),</span>
 <span id="cb27-22"><a href="#cb27-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Sentence Number (Beginning to End)"</span>,</span>
 <span id="cb27-23"><a href="#cb27-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Sentence Sentiment"</span></span>
 <span id="cb27-24"><a href="#cb27-24" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
@@ -900,14 +951,24 @@ Figure&nbsp;1: Sentiment Trajectory Across Jane Austen Novels Using Bing lexicon
 </section>
 <section id="findings-and-recommendations" class="level3">
 <h3 class="anchored" data-anchor-id="findings-and-recommendations">Findings and Recommendations</h3>
+<p>In this work, a sentiment analysis workflow was replicated from Chapter 2 of <em>Text Mining with R</em> <span class="citation" data-cites="silge2017text">(<a href="#ref-silge2017text" role="doc-biblioref">Silge and Robinson 2017</a>)</span>. The workflow was then modified for analysis of modern sports media, particularly coverage of the WNBA by ESPN (). Comparing Victorian literature to contemporary sports writing reveals significant differences in corpus tone, lexicon accuracy, and structural length.</p>
+<p>In Jane Austen’s novels, sentiment trajectories fluctuate dramatically above and below zero, capturing the emotional rhythm of the novels. In contrast, the ESPN WNBA corpus is overwhelmingly right-skewed and positive. Every single article evaluated via the `syuzhet` lexicon produced a net positive score.</p>
+<p>This reflects the editorial cycle of modern sports journalism: following the conclusion of the WNBA Finals, reporting naturally pivots away from high-stakes game conflict writing to celebratory features, expansion team anticipation, mock drafts, and historical championship rankings.</p>
+<p>A central takeaway from Chapter 2 of <em>Text Mining with R</em> is that generic sentiment dictionaries struggle when words have domain-specific connotations (e.g., the word <em>“miss”</em> in Austen’s works) <span class="citation" data-cites="silge2017text">(<a href="#ref-silge2017text" role="doc-biblioref">Silge and Robinson 2017</a>)</span>. This issue is magnified in sports analytics when using the <code>bing</code> lexicon. Words such as <em>“foul”</em>, <em>“loss”</em>, <em>“cold”</em>, and <em>“offensive”</em> are flagged as negative. While negative in everyday language, in basketball these are standard, neutral descriptors of tactical gameplay. Words like <em>“lead”</em>, <em>“award”</em>, <em>“championship”</em>, and <em>“top”</em> dominate the positive counts, reinforcing the aspirational tone of sports feature journalism.</p>
+<p>In the raw Syuzhet scoring, article sentiment scores ranged from <span class="math inline">\(+1\)</span> to over <span class="math inline">\(+35\)</span>. However, this variance was largely driven by document length rather than emotional intensity: longer investigative pieces accumulated dozens of mild positive words simply by volume.</p>
+<p>By implementing a length-normalized sentiment metric (<span class="math inline">\(\frac{\text{Sentiment Score}}{\text{Word Count}} \times 100\)</span>), a more apt comparison could be made. This demonstrated that shorter, punchy headlines often possessed higher per-word emotional density than multi-page retrospectives.</p>
+<p>This work could be extended in two key ways. First, future sports text mining should establish a domain-specific exclusion list that neutralizes terms like <em>“steal”</em>, <em>“foul”</em>, and <em>“turnover”</em>. Second, rather than scoring entire articles, combining sentiment scoring with Named Entity Recognition (NER) would allow researchers to separate fan sentiment toward specific players (e.g., Caitlin Clark or Breanna Stewart) from general game reporting.</p>
 </section>
 </section>
 </section>
 <section id="cited-works" class="level1">
 <h1>Cited Works</h1>
 <div id="refs" class="references csl-bib-body hanging-indent" role="list">
-<div id="ref-espn_wnba" class="csl-entry" role="listitem">
-ESPN Inc. 2024. <em>ESPN WNBA News RSS Feed</em>. <a href="https://www.espn.com/espn/rss/wnba/news" class="uri">Https://www.espn.com/espn/rss/wnba/news</a>.
+<div id="ref-syuzhet" class="csl-entry" role="listitem">
+Jockers, Matthew L. 2020. <em>Syuzhet: Extracts Sentiment and Sentiment-Derived Plot Arcs from Text</em>. <a href="https://CRAN.R-project.org/package=syuzhet">https://CRAN.R-project.org/package=syuzhet</a>.
+</div>
+<div id="ref-tidyRSS" class="csl-entry" role="listitem">
+McDonnell, Robert Myles. 2021. <em>tidyRSS: Tidy RSS for r</em>. <a href="https://CRAN.R-project.org/package=tidyRSS">https://CRAN.R-project.org/package=tidyRSS</a>.
 </div>
 <div id="ref-silge2017text" class="csl-entry" role="listitem">
 Silge, Julia, and David Robinson. 2017. <em>Text Mining with r: A Tidy Approach</em>. O’Reilly Media. <a href="https://www.tidytextmining.com/">https://www.tidytextmining.com/</a>.
