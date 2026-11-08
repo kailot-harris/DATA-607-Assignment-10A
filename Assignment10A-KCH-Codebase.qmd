@@ -1,5 +1,5 @@
 ---
-title: "DATA 607 - Assignment 10A - Approach"
+title: "DATA 607 - Assignment 10A - Codebase"
 author: "Kailot C. Harris"
 date: "2026/11/03"
 format:
@@ -20,7 +20,7 @@ In this assignment, sentiment analysis is performed in two parts.
 
 First, the workflow from Chapter 2 of *Text Mining with R* is replicated [@silge2017text]. Using Jane Austen's published novels, the tidy text approach is reproduced to accomplish sentiment extraction, lexicon comparison, word frequency contributions, and narrative trajectories. The original methodology and examples are referenced from the online text at [tidytextmining.com/sentiment](https://www.tidytextmining.com/sentiment.html).
 
-Second, the analysis is extended to a completely different corpus and domain: contemporary sports journalism covering the Women's National Basketball Association (WNBA). Using the `tidyRSS` package [@tidyRSS] and `rvest`, recent ESPN WNBA news coverage is harvested, and the full text of each reporting piece is scraped. Matthew Jockers' sentiment engine is app0lied via the `syuzhet` package [@syuzhet], evaluating both raw and length-normalized sentiment alongside traditional dictionary methods.
+Second, the analysis is extended to a completely different corpus and domain: contemporary sports journalism covering the Women's National Basketball Association (WNBA). Using the `tidyRSS` package [@tidyRSS] and `rvest`, recent ESPN WNBA news coverage is harvested, and the full text of each reporting piece is scraped. Matthew Jockers' sentiment engine is applied via the `syuzhet` package [@syuzhet], evaluating both raw and length-normalized sentiment alongside traditional dictionary methods.
 
 # Approach
 
@@ -385,9 +385,19 @@ wnba_corpus <- wnba_feed |>
 knitr::kable(head(wnba_corpus |>  select(title, text), 3))
 ```
 
-To achieve an analytical depth comparable to the full-length chapters analyzed in Jane Austen's novels, we cannot rely solely on 30-word summary blurbs. Using the canonical URLs captured in the item_link column, we build a custom web scraper using rvest to extract all paragraph elements (<p>) from the body of each reporting piece. A tryCatch wrapper is included to handle potential network timeouts or paywall redirects gracefully, ensuring the Quarto document compiles cleanly without breaking if an individual link fails.
+To achieve an analytical depth comparable to the full-length chapters analyzed in Jane Austen's novels, we cannot rely solely on 30-word summary blurbs. Using the canonical URLs captured in the `item_link` column, we build a custom web scraper using `rvest` to extract all paragraph elements from the body of each reporting piece. A `tryCatch` wrapper is included to handle potential network timeouts or paywall redirects gracefully, ensuring the Quarto document compiles cleanly without breaking if an individual link fails.
 
 ```{r}
+#| label: get-wnba-articles
+#| echo: true
+#| warning: false
+#| message: false
+
+if (file.exists("wnba_data.rds")) {
+  wnba_full_articles <- readRDS("wnba_data.rds")
+} else {
+  # your existing scraping code...
+
 get_article_text <- function(url) {
   tryCatch({
     read_html(url) |>
@@ -403,6 +413,11 @@ wnba_full_articles <- wnba_feed |>
   mutate(full_article_text = map_chr(link, 
                                      get_article_text)) |>
   filter(!is.na(full_article_text))
+
+saveRDS(wnba_full_articles, "wnba_data.rds")
+}
+
+
 ```
 
 ```{r}
@@ -439,8 +454,8 @@ To evaluate the sports corpus, three distinct analyses are executed:
 First, evaluating the initial feed text using the syuzhet lexicon [@syuzhet] is undertaken. Unlike binary dictionaries that simply tally words, the Syuzhet engine assigns continuous emotional valence to sentences and short texts.
 
 ```{r}
-#| label: syuzhet-wnba
-#| echo: false
+#| label: fig-1
+#| echo: true
 #| warning: false
 #| message: false
 #| fig-cap: "Right Skewed Syuzhet Sentiment in WNBA News"
@@ -464,20 +479,16 @@ wnba_corpus_syuzhet |>
   theme_standard()
 ```
 
-As visualized in the histogram above ( @syuzhet-wnba), the distribution of sentiment across WNBA headlines is strongly right-skewed. Every single article in the feed scores above the neutral baseline (red dashed line at zero). Even articles discussing team struggles or player recoveries are framed through a positive editorial lens (e.g., highlighting resilience or historic milestones).
+As visualized in the histogram above ( @fig-1), the distribution of sentiment across WNBA headlines is strongly right-skewed. Every single article in the feed scores above the neutral baseline (red dashed line at zero). Even articles discussing team struggles or player recoveries are framed through a positive editorial lens (e.g., highlighting resilience or historic milestones).
 
-To understand which terms drive this positivity, Chapter 2’s tokenization and join methodology is mirrored. The full-text corpus is unnsted into individual words, common stop words are stripped, and the corpus is joined against the bing lexicon to evaluate word-level contribution.
+To understand which terms drive this positivity, Chapter 2’s tokenization and join methodology is mirrored. The full-text corpus is unnested into individual words, common stop words are stripped, and the corpus is joined against the bing lexicon to evaluate word-level contribution.
 
 ```{r}
-#| label: words-wnba
-#| echo: false
+#| label: fig-words-wnba
+#| echo: true
 #| warning: false
 #| message: false
 #| fig-cap: "Most Frequent Sentiment Words in ESPN WNBA News"
-
-wnba_words <- wnba_corpus |>
-  unnest_tokens(word, full_text) |>
-  anti_join(stop_words, by = join_by(word))
 
 wnba_words <- wnba_full_articles |>
   mutate(article_id = row_number()) |>
@@ -506,7 +517,9 @@ wnba_bing_counts |>
   theme_standard()
 ```
 
-The word contribution plot ( @words-wnba ) illustrates both the strengths and the inherent limitations of using general-purpose lexicons on specialized sports data. First, terms like "lead", "award", "championship", and "top" dominate the positive facet, reflecting celebratory coverage of seasonal awards and championship milestones. Second, terms like "loss", "foul", "cold", and "offensive" heavily populate the negative facet. In sports analytics, these are neutral, mechanical descriptors of play rather than indicators of genuine negative sentiment. This parallels Silge & Robinson's finding regarding the word "miss" in Austen's novels.
+The word contribution plot ( @fig-words-wnba ) illustrates both the strengths and the inherent limitations of using general-purpose lexicons on specialized sports data. First, terms like "lead", "award", "championship", and "top" may dominate the positive facet, reflecting celebratory coverage of seasonal awards and championship milestones. Second, terms like "loss", "foul", "cold", and "offensive" may populate the negative facet. In sports analytics, these are neutral, mechanical descriptors of play rather than indicators of genuine negative sentiment. This parallels Silge & Robinson's finding regarding the word "miss" in Austen's novels.
+
+Most notably, team names introduce severe sentiment distortion: 'fever' (Indiana Fever) appears as the single largest negative word, while 'golden' (Golden State Valkyries) and 'liberty' (New York Liberty) drive top positive counts. Furthermore, 'defensive' is penalized as negative while 'defeated' scores positive.
 
 When analyzing long-form journalism, raw cumulative sentiment is inherently confounded by article length: a 2,500-word feature story will naturally amass a higher total score than a 250-word roster bulletin simply due to word volume. To resolve this length bias, we compute a length-normalized sentiment index:
 
@@ -515,8 +528,8 @@ $Normalized Score=\frac{Syuzhet Cumulative Sentiment}{Total Word Count }×100$
 This represents the net emotional valence per 100 words of prose.
 
 ```{r}
-#| label: wnba-normalized-scores
-#| echo: false
+#| label: fig-wnba-normalized-scores
+#| echo: true
 #| warning: false
 #| message: false
 #| fig-cap: "WNBA News Displays Postseason Bliss (Syuzhet Lexicon)"
@@ -526,7 +539,7 @@ wnba_scored <- wnba_full_articles |>
   mutate(
     article_id = row_number(),
     clean_title = stringr::str_replace_all(title, "[^\x01-\x7F]+", ""),
-    short_title = stringr::str_trunc(clean_title, 25),
+    short_title = stringr::str_trunc(clean_title, 35),
      word_count = stringr::str_count(full_article_text, "\\w+"),
     sentiment_score = get_sentiment(full_article_text, method = "syuzhet"),
     sentiment_normalized = (sentiment_score / word_count) * 100
@@ -550,9 +563,15 @@ wnba_scored |>
 
 Normalizing by length reveals that the highest sentiment concentrations belong to forward-looking, celebratory headlines (such as championship parade reporting and franchise dynasty declarations). Even after adjusting for document length, every single article remains net positive, highlighting the pervasive promotional optimism of the WNBA offseason media cycle.
 
-In Chapter 2, Silge and Robinson demonstrated how Austen’s novels can be viewed as narrative arcs with emotional peaks and valleys. To determine whether modern sports journalism exhibits similar narrative arcs, the longest article in the corpus is isolate, segmented it into individual sentences, and then sentence-level sentiment progression from start to finish can be tracked. A LOESS smoothing curve is overlaid to capture the underlying emotional trajectory.
+In Chapter 2, Silge and Robinson demonstrated how Austen’s novels can be viewed as narrative arcs with emotional peaks and valleys. To determine whether modern sports journalism exhibits similar narrative arcs, the longest article in the corpus is isolated, segmented it into individual sentences, and sentence-level sentiment progression is tracked from start to finish. A LOESS smoothing curve is overlaid to capture the underlying emotional trajectory.
 
 ```{r}
+#| label: fig-wnba-article-length
+#| echo: false
+#| warning: false
+#| message: false
+#| fig-cap: "Sentiment Trajectory"
+
 longest_article <- wnba_full_articles |>
   slice_max(nchar(full_article_text), n = 1)
 
@@ -581,11 +600,11 @@ article_sentences |>
 
 ```
 
-The trajectory plot reflects the analytical, comparative structure of a sports ranking listicle:
+The trajectory plot illustrates the structural progression of an in-depth sports postseason outlook:
 
-- Celebratory Opening: The curve begins in elevated positive territory as the author introduces the newly crowned champion (the Valkyries) and establishes the criteria for all-time great teams.
-- Balanced Evaluation: Across sentences 40 to 160, sentiment oscillates evenly around a modest baseline, balancing praise with critique across decades of past champions.
-- Critique and Conclusions: Rather than a triumphant rebound, the LOESS curve drifts downward and dips slightly below zero near sentence 200. In sports ranking retrospectives, lower-ranked championship teams are routinely evaluated by their flaws (such as poor regular-season win percentages, playoff close-calls, or roster limitations) compared to dominant dynasties.
+- The curve begins with elevated positive sentiment ($\approx +0.8$), likely opening with celebratory reflections on Golden State's championship victory.
+- Between sentences 100 and 220, the trajectory descends to a lower plateau ($\approx +0.25$). Here, the reporting likely shifts toward runner-up Atlanta's heartbreak, pending free-agency decisions, and roster turnover.
+- Unlike a historical ranking, this forward-looking piece rebounds upward near sentence 300 ($\approx +0.5$). The article concludes on an upbeat note, likely focusing on draft assets, recovery timelines, and title aspirations for the upcoming season.
 
 ### Findings and Recommendations
 
