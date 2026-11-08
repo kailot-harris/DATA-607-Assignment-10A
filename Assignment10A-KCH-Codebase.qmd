@@ -629,6 +629,10 @@ By implementing a length-normalized sentiment metric ($\frac{\text{Sentiment Sco
 
 This work could be extended in two key ways. First, future sports text mining should establish a domain-specific exclusion list that neutralizes terms like *"steal"*, *"foul"*, and *"turnover"*. Second, rather than scoring entire articles, combining sentiment scoring with Named Entity Recognition (NER) would allow researchers to separate fan sentiment toward specific players (e.g., Caitlin Clark or Breanna Stewart) from general game reporting.
 
+#### Generative AI Usage
+
+Generative artificial intelligence was consulted during the development of this analysis. Specifically, Google Gemini 3.8 Flash via the web interface was utilized for troubleshooting `dplyr` join diagnostics (`relationship = "many-to-many"`) and designing the defensive `rvest` scraping pipeline with `tryCatch()`.
+
 # Cited Works
 
 ::: {#refs}
