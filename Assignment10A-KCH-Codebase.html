@@ -295,29 +295,43 @@ window.Quarto = {
 
 <div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
 <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-  <nav id="TOC" role="doc-toc" class="toc-active">
+  <nav id="TOC" role="doc-toc" class="toc-active" data-toc-expanded="2">
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
   <li><a href="#introduction-and-overview" id="toc-introduction-and-overview" class="nav-link active" data-scroll-target="#introduction-and-overview">Introduction and Overview</a></li>
   <li><a href="#approach" id="toc-approach" class="nav-link" data-scroll-target="#approach">Approach</a></li>
   <li><a href="#codebase" id="toc-codebase" class="nav-link" data-scroll-target="#codebase">Codebase</a>
-  <ul class="collapse">
+  <ul>
   <li><a href="#step-1-replicate-sentiment-analysis-example" id="toc-step-1-replicate-sentiment-analysis-example" class="nav-link" data-scroll-target="#step-1-replicate-sentiment-analysis-example">Step 1: Replicate Sentiment Analysis Example</a>
   <ul class="collapse">
   <li><a href="#data-and-library-loading" id="toc-data-and-library-loading" class="nav-link" data-scroll-target="#data-and-library-loading">Data and library loading</a></li>
   <li><a href="#jane-austen-book-extraction" id="toc-jane-austen-book-extraction" class="nav-link" data-scroll-target="#jane-austen-book-extraction">Jane Austen Book Extraction</a></li>
   <li><a href="#sentiment-trajectory-across-jane-austen-novels" id="toc-sentiment-trajectory-across-jane-austen-novels" class="nav-link" data-scroll-target="#sentiment-trajectory-across-jane-austen-novels">Sentiment Trajectory Across Jane Austen Novels</a></li>
-  <li><a href="#analysis-of-pride-and-prejudice" id="toc-analysis-of-pride-and-prejudice" class="nav-link" data-scroll-target="#analysis-of-pride-and-prejudice">Analysis of Pride and Prejudice</a></li>
-  <li><a href="#lexicon-comparison---pride-and-prejudice" id="toc-lexicon-comparison---pride-and-prejudice" class="nav-link" data-scroll-target="#lexicon-comparison---pride-and-prejudice">Lexicon Comparison - Pride and Prejudice</a></li>
+  <li><a href="#analysis-of-pride-and-prejudice" id="toc-analysis-of-pride-and-prejudice" class="nav-link" data-scroll-target="#analysis-of-pride-and-prejudice">Analysis of Pride and Prejudice</a>
+  <ul class="collapse">
+  <li><a href="#applying-sentiment-lexicons" id="toc-applying-sentiment-lexicons" class="nav-link" data-scroll-target="#applying-sentiment-lexicons">Applying sentiment lexicons</a></li>
+  </ul></li>
+  <li><a href="#lexicon-comparison---pride-and-prejudice" id="toc-lexicon-comparison---pride-and-prejudice" class="nav-link" data-scroll-target="#lexicon-comparison---pride-and-prejudice">Lexicon Comparison - Pride and Prejudice</a>
+  <ul class="collapse">
+  <li><a href="#visualizing-relative-word-counts" id="toc-visualizing-relative-word-counts" class="nav-link" data-scroll-target="#visualizing-relative-word-counts">Visualizing Relative Word Counts</a></li>
+  <li><a href="#stop-word-definition" id="toc-stop-word-definition" class="nav-link" data-scroll-target="#stop-word-definition">Stop Word Definition</a></li>
+  </ul></li>
   <li><a href="#word-cloud-construction" id="toc-word-cloud-construction" class="nav-link" data-scroll-target="#word-cloud-construction">Word cloud construction</a></li>
-  <li><a href="#sentence-analysis" id="toc-sentence-analysis" class="nav-link" data-scroll-target="#sentence-analysis">Sentence Analysis</a></li>
+  <li><a href="#sentence-analysis" id="toc-sentence-analysis" class="nav-link" data-scroll-target="#sentence-analysis">Sentence Analysis</a>
+  <ul class="collapse">
+  <li><a href="#summarize-jane-austen-chapters" id="toc-summarize-jane-austen-chapters" class="nav-link" data-scroll-target="#summarize-jane-austen-chapters">Summarize Jane Austen Chapters</a></li>
+  <li><a href="#proportion-of-negative-words-in-chapter-34" id="toc-proportion-of-negative-words-in-chapter-34" class="nav-link" data-scroll-target="#proportion-of-negative-words-in-chapter-34">Proportion of negative words in Chapter 34</a></li>
+  </ul></li>
   </ul></li>
   <li><a href="#step-2-extension-to-espns-wnba-news" id="toc-step-2-extension-to-espns-wnba-news" class="nav-link" data-scroll-target="#step-2-extension-to-espns-wnba-news">Step 2: Extension to ESPN’s WNBA News</a>
   <ul class="collapse">
   <li><a href="#data-loading" id="toc-data-loading" class="nav-link" data-scroll-target="#data-loading">Data loading</a></li>
   <li><a href="#analysis-and-visualizations" id="toc-analysis-and-visualizations" class="nav-link" data-scroll-target="#analysis-and-visualizations">Analysis and Visualizations</a></li>
-  <li><a href="#findings-and-recommendations" id="toc-findings-and-recommendations" class="nav-link" data-scroll-target="#findings-and-recommendations">Findings and Recommendations</a></li>
+  <li><a href="#findings-and-recommendations" id="toc-findings-and-recommendations" class="nav-link" data-scroll-target="#findings-and-recommendations">Findings and Recommendations</a>
+  <ul class="collapse">
+  <li><a href="#generative-ai-usage" id="toc-generative-ai-usage" class="nav-link" data-scroll-target="#generative-ai-usage">Generative AI Usage</a></li>
+  </ul></li>
   </ul></li>
   </ul></li>
   <li><a href="#cited-works" id="toc-cited-works" class="nav-link" data-scroll-target="#cited-works">Cited Works</a></li>
@@ -802,26 +816,25 @@ Figure&nbsp;1: Sentiment Trajectory Across Jane Austen Novels Using Bing lexicon
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">file.exists</span>(<span class="st">"wnba_data.rds"</span>)) {</span>
 <span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  wnba_full_articles <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="st">"wnba_data.rds"</span>)</span>
 <span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
-<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>  <span class="co"># your existing scraping code...</span></span>
-<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>get_article_text <span class="ot">&lt;-</span> <span class="cf">function</span>(url) {</span>
-<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tryCatch</span>({</span>
-<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">read_html</span>(url) <span class="sc">|&gt;</span></span>
-<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>      <span class="fu">html_elements</span>(<span class="st">"p"</span>) <span class="sc">|&gt;</span></span>
-<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>      <span class="fu">html_text2</span>() <span class="sc">|&gt;</span></span>
-<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>      <span class="fu">paste</span>(<span class="at">collapse =</span> <span class="st">" "</span>)</span>
-<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>  }, <span class="at">error =</span> <span class="cf">function</span>(e) <span class="cn">NA_character_</span>)</span>
-<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a>wnba_full_articles <span class="ot">&lt;-</span> wnba_feed <span class="sc">|&gt;</span></span>
-<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="at">title =</span> item_title, </span>
-<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a>         <span class="at">link =</span> item_link) <span class="sc">|&gt;</span></span>
-<span id="cb25-18"><a href="#cb25-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">full_article_text =</span> <span class="fu">map_chr</span>(link, </span>
-<span id="cb25-19"><a href="#cb25-19" aria-hidden="true" tabindex="-1"></a>                                     get_article_text)) <span class="sc">|&gt;</span></span>
-<span id="cb25-20"><a href="#cb25-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(full_article_text))</span>
-<span id="cb25-21"><a href="#cb25-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-22"><a href="#cb25-22" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(wnba_full_articles, <span class="st">"wnba_data.rds"</span>)</span>
-<span id="cb25-23"><a href="#cb25-23" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>get_article_text <span class="ot">&lt;-</span> <span class="cf">function</span>(url) {</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tryCatch</span>({</span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">read_html</span>(url) <span class="sc">|&gt;</span></span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>      <span class="fu">html_elements</span>(<span class="st">"p"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>      <span class="fu">html_text2</span>() <span class="sc">|&gt;</span></span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>      <span class="fu">paste</span>(<span class="at">collapse =</span> <span class="st">" "</span>)</span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>  }, <span class="at">error =</span> <span class="cf">function</span>(e) <span class="cn">NA_character_</span>)</span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a>wnba_full_articles <span class="ot">&lt;-</span> wnba_feed <span class="sc">|&gt;</span></span>
+<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="at">title =</span> item_title, </span>
+<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a>         <span class="at">link =</span> item_link) <span class="sc">|&gt;</span></span>
+<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">full_article_text =</span> <span class="fu">map_chr</span>(link, </span>
+<span id="cb25-18"><a href="#cb25-18" aria-hidden="true" tabindex="-1"></a>                                     get_article_text)) <span class="sc">|&gt;</span></span>
+<span id="cb25-19"><a href="#cb25-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(full_article_text))</span>
+<span id="cb25-20"><a href="#cb25-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-21"><a href="#cb25-21" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(wnba_full_articles, <span class="st">"wnba_data.rds"</span>)</span>
+<span id="cb25-22"><a href="#cb25-22" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
 </section>

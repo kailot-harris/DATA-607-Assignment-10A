@@ -5,6 +5,8 @@ date: "2026/11/03"
 format:
   html:
     toc: true
+    toc-depth: 4
+    toc-expand: 2
     code-fold: true
     code-overflow: wrap
 editor: visual
@@ -396,8 +398,7 @@ To achieve an analytical depth comparable to the full-length chapters analyzed i
 if (file.exists("wnba_data.rds")) {
   wnba_full_articles <- readRDS("wnba_data.rds")
 } else {
-  # your existing scraping code...
-
+  
 get_article_text <- function(url) {
   tryCatch({
     read_html(url) |>
